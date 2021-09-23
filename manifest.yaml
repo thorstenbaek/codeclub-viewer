@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: kodekurs
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kodekurs-dips-codeclub-viewer
+  namespace: kodekurs
+  labels:
+    app.kubernetes.io/name: dips-codeclub-viewer
+    app.kubernetes.io/instance: kodekurs
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: dips-codeclub-viewer
+    app.kubernetes.io/instance: kodekurs
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kodekurs-dips-codeclub-viewer
+  namespace: kodekurs
+  labels:    
+    app.kubernetes.io/name: dips-codeclub-viewer
+    app.kubernetes.io/instance: kodekurs
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dips-codeclub-viewer
+      app.kubernetes.io/instance: kodekurs
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dips-codeclub-viewer
+        app.kubernetes.io/instance: kodekurs
+    spec:
+      serviceAccountName: default
+      securityContext:
+        {}
+      containers:
+        - name: dips-codeclub-viewer
+          securityContext:
+            {}
+          image: "thorstenbaek/dips-codeclub-viewer:v1.0.0.2"          
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP          
+          resources:
+            {}
+---
+# Source: SandBox/charts/dips-ehr-app/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: kodekurs-dips-codeclub-viewer
+  namespace: kodekurs
+  labels:    
+    app.kubernetes.io/name: dips-codeclub-viewer
+    app.kubernetes.io/instance: kodekurs
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  tls:
+    - hosts:
+        - "kodekurs.dips-codeclub-viewer.api.dips.no"
+      secretName: dips-codeclub-viewer-tls
+  rules:
+    - host: "kodekurs.dips-codeclub-viewer.api.dips.no"
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: kodekurs-dips-codeclub-viewer
+              servicePort: 8080
