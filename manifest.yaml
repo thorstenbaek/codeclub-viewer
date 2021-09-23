@@ -53,7 +53,7 @@ spec:
         - name: dips-codeclub-viewer
           securityContext:
             {}
-          image: "thorstenbaek/dips-codeclub-viewer:v1.0.0.2"          
+          image: "thorstenbaek/dips-codeclub-viewer:v1.0.0.3"          
           imagePullPolicy: Always
           ports:
             - name: http
